@@ -121,16 +121,23 @@ def forward(model, i, data):
 
 
 def train_test(model, train_data, test_data):
+    # import pdb; pdb.set_trace()
     model.scheduler.step()
     print('start training: ', datetime.datetime.now())
     model.train()
     total_loss = 0.0
     slices = train_data.generate_batch(model.batch_size)
     for i, j in zip(slices, np.arange(len(slices))):
-        model.optimizer.zero_grad()
+        # model.optimizer.zero_grad()
         targets, scores = forward(model, i, train_data)
         targets = trans_to_cuda(torch.Tensor(targets).long())
+        # print(len(scores))
+        # print(scores)
+        # print(len(targets - 1))
+        # print(targets - 1)
         loss = model.loss_function(scores, targets - 1)
+        # loss = model.loss_function(scores, targets)
+        # exit()
         loss.backward()
         model.optimizer.step()
         total_loss += loss

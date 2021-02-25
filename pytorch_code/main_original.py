@@ -9,13 +9,13 @@ Created on July, 2018
 import argparse
 import pickle
 import time
-from utils import build_graph, Data, split_validation
+from utils_original import build_graph, Data, split_validation
 from model import *
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--dataset', default='test', help='dataset name: diginetica/yoochoose1_4/yoochoose1_64/sample')
-parser.add_argument('--batchSize', type=int, default=100, help='input batch size')
-parser.add_argument('--hiddenSize', type=int, default=100, help='hidden state size')
+parser.add_argument('--dataset', default='sample', help='dataset name: diginetica/yoochoose1_4/yoochoose1_64/sample')
+parser.add_argument('--batchSize', type=int, default=16, help='input batch size')
+parser.add_argument('--hiddenSize', type=int, default=64, help='hidden state size')
 parser.add_argument('--epoch', type=int, default=30, help='the number of epochs to train for')
 parser.add_argument('--lr', type=float, default=0.001, help='learning rate')  # [0.001, 0.0005, 0.0001]
 parser.add_argument('--lr_dc', type=float, default=0.1, help='learning rate decay rate')
@@ -29,6 +29,7 @@ parser.add_argument('--valid_portion', type=float, default=0.1, help='split the 
 opt = parser.parse_args()
 print(opt)
 
+
 def main():
     train_data = pickle.load(open('../datasets/' + opt.dataset + '/train.txt', 'rb'))
     if opt.validation:
@@ -38,9 +39,7 @@ def main():
         test_data = pickle.load(open('../datasets/' + opt.dataset + '/test.txt', 'rb'))
     # all_train_seq = pickle.load(open('../datasets/' + opt.dataset + '/all_train_seq.txt', 'rb'))
     # g = build_graph(all_train_seq)
-    # print(train_data)
     train_data = Data(train_data, shuffle=True)
-    # exit()
     test_data = Data(test_data, shuffle=False)
     # del all_train_seq, g
     if opt.dataset == 'diginetica':
@@ -48,7 +47,7 @@ def main():
     elif opt.dataset == 'yoochoose1_64' or opt.dataset == 'yoochoose1_4':
         n_node = 37484
     else:
-        n_node = 414299
+        n_node = 310
 
     model = trans_to_cuda(SessionGraph(opt, n_node))
 

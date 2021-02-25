@@ -13,6 +13,7 @@ import pickle
 import operator
 import datetime
 import os
+
 parser = argparse.ArgumentParser()
 parser.add_argument('--dataset', default='sample', help='dataset name: diginetica/yoochoose/sample')
 opt = parser.parse_args()
@@ -35,37 +36,35 @@ with open(dataset, "r") as f:
     ctr = 0
     curid = -1
     curdate = None
-    """
-    date: 上一个 click 的时间
-    curdate: 当前时间
-    """ 
     for data in reader:
         sessid = data['session_id']
-        if curdate and not curid == sessid: # 新的 session 但不能是第一个 session
-            # import pdb; pdb.set_trace()
-
+        if curdate and not curid == sessid:
             date = ''
             if opt.dataset == 'yoochoose':
                 date = time.mktime(time.strptime(curdate[:19], '%Y-%m-%dT%H:%M:%S'))
             else:
+                # print('\ncurdate:\n', curdate)
+                # print('\ntime:\n', time.strptime(curdate, '%Y-%m-%d'))
                 date = time.mktime(time.strptime(curdate, '%Y-%m-%d'))
+                # print('\ndata:\n', data)
+                # exit()
             sess_date[curid] = date
         curid = sessid
         if opt.dataset == 'yoochoose':
             item = data['item_id']
         else:
             item = data['item_id'], int(data['timeframe'])
-        curdate = '' # useless
+        curdate = ''
         if opt.dataset == 'yoochoose':
             curdate = data['timestamp']
         else:
             curdate = data['eventdate']
 
         if sessid in sess_clicks:
-            sess_clicks[sessid] += [item] # concatenate
+            sess_clicks[sessid] += [item]
         else:
-            sess_clicks[sessid] = [item] # 第一次见到这个 session
-        ctr += 1 # 记录了多少行
+            sess_clicks[sessid] = [item]
+        ctr += 1
     date = ''
     if opt.dataset == 'yoochoose':
         date = time.mktime(time.strptime(curdate[:19], '%Y-%m-%dT%H:%M:%S'))
@@ -113,11 +112,8 @@ for _, date in dates:
     if maxdate < date:
         maxdate = date
 
-
-
 # 7 days for test
 splitdate = 0
-
 if opt.dataset == 'yoochoose':
     splitdate = maxdate - 86400 * 1  # the number of seconds for a day：86400
 else:
@@ -130,14 +126,11 @@ tes_sess = filter(lambda x: x[1] > splitdate, dates)
 # Sort sessions by date
 tra_sess = sorted(tra_sess, key=operator.itemgetter(1))     # [(session_id, timestamp), (), ]
 tes_sess = sorted(tes_sess, key=operator.itemgetter(1))     # [(session_id, timestamp), (), ]
-
 print(len(tra_sess))    # 186670    # 7966257
 print(len(tes_sess))    # 15979     # 15324
-print(tra_sess[:3])     #[('2671', 1451923200.0), ('1211', 1452355200.0), ('3780', 1452355200.0)]
+print(tra_sess[:3])
 print(tes_sess[:3])
 print("-- Splitting train set and test set @ %ss" % datetime.datetime.now())
-print('------------------------')
-# exit()
 
 # Choosing item count >=5 gives approximately the same number of items as reported in paper
 item_dict = {}
@@ -190,7 +183,6 @@ tes_ids, tes_dates, tes_seqs = obtian_tes()
 
 
 def process_seqs(iseqs, idates):
-    # import pdb; pdb.set_trace()
     out_seqs = []
     out_dates = []
     labs = []
@@ -202,6 +194,14 @@ def process_seqs(iseqs, idates):
             out_seqs += [seq[:-i]]
             out_dates += [date]
             ids += [id]
+            # if i <= 5:
+            #     print("-------------------------------------------------------")
+            #     print('\nseq:\n', seq)
+            #     print('\ntar:\n', tar)
+            #     print('\nlabs:\n', labs)
+            #     print('\nout_seqs:\n', out_seqs)
+            # else:
+            #     exit()
 
     return out_seqs, out_dates, labs, ids
 
@@ -209,20 +209,14 @@ def process_seqs(iseqs, idates):
 tr_seqs, tr_dates, tr_labs, tr_ids = process_seqs(tra_seqs, tra_dates)
 te_seqs, te_dates, te_labs, te_ids = process_seqs(tes_seqs, tes_dates)
 tra = (tr_seqs, tr_labs)
-print('------------------------------')
-# print('\ntra:\n', tra)
-print('\ntr_seqs:\n', tr_seqs)
-print('\ntr_seqs:\n', type(tr_seqs))
-print('\ntr_labs:\n', tr_labs)
-print('\ntr_labs:\n', type(tr_labs))
-
 tes = (te_seqs, te_labs)
+print("len(tr_seqs)")
 print(len(tr_seqs))
+print("len(te_seqs)")
 print(len(te_seqs))
 print(tr_seqs[:3], tr_dates[:3], tr_labs[:3])
 print(te_seqs[:3], te_dates[:3], te_labs[:3])
 all = 0
-exit()
 
 for seq in tra_seqs:
     all += len(seq)

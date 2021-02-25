@@ -53,9 +53,6 @@ def split_validation(train_set, valid_portion):
 
 class Data():
     def __init__(self, data, shuffle=False, graph=None):
-        # print("-------------------------")
-        # print(data[0])
-        # print(data[1])
         inputs = data[0]
         inputs, mask, len_max = data_masks(inputs, [0])
         self.inputs = np.asarray(inputs)
